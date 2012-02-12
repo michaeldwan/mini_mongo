@@ -47,4 +47,14 @@ class TestDocument < MiniTest::Unit::TestCase
     animal = Animal.new({species: "Cat"})
     assert_equal animal["_id"], animal.id
   end
+
+  def test_equality
+    a = Animal.new
+    assert_equal a, a
+    assert_equal a, a.dup
+    assert a != Animal.new
+
+    a.insert!
+    assert_equal a, Animal.find_one(a.id)
+  end
 end

@@ -47,6 +47,11 @@ module MiniMongo::Document
     self["_id"]
   end
 
+  def ==(other)
+    return false unless self.class == other.class
+    self.id == other.id
+  end
+
   module ClassMethods
     def db
       @db || MiniMongo.db || nil
