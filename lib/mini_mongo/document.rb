@@ -36,7 +36,7 @@ module MiniMongo::Document
 
   def set_document(hash)
     hash = MiniMongo::DotHash.new(hash) unless hash.is_a?(MiniMongo::DotHash)
-    @document = MiniMongo::DotHash.new(hash)
+    @document = hash
   end
 
   def id
@@ -50,6 +50,17 @@ module MiniMongo::Document
   def ==(other)
     return false unless self.class == other.class
     self.id == other.id
+  end
+
+  def to_hash
+    document.to_hash
+  end
+
+  def merge!(hash)
+    snapshot
+    hash = MiniMongo::DotHash.new(hash) unless hash.is_a?(MiniMongo::DotHash)
+    set_document(MiniMongo::DotHash.new(document.raw_hash.deep_merge(hash)))
+    document
   end
 
   module ClassMethods

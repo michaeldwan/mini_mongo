@@ -5,6 +5,7 @@ end
 require 'active_support/concern'
 require 'active_model'
 require 'active_support/core_ext/string'
+require 'active_support/core_ext/hash'
 require 'active_support/inflections'
 require 'active_support/core_ext/object/blank'
 

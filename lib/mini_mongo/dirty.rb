@@ -31,7 +31,7 @@ module MiniMongo::Dirty
   # protected
     def snapshot
       @changes = nil
-      return if @snapshot
+      return if @snapshot || new?
       @snapshot = Marshal.dump(self.document.dup)
       true
     end

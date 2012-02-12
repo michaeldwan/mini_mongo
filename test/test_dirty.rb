@@ -13,6 +13,8 @@ class TestDirty < MiniTest::Unit::TestCase
     car = Car.new(make: "Ferrari", model: "F2012")
     assert car.dirty?
     assert_equal ({"_id" => [nil, car.to_oid], "make" => [nil, "Ferrari"], "model" => [nil, "F2012"]}), car.changes
+    car["country"] = "Italy"
+    assert_equal ({"_id" => [nil, car.to_oid], "make" => [nil, "Ferrari"], "model" => [nil, "F2012"], "country" => [nil, "Italy"]}), car.changes
     car.save!
 
     assert_equal ({}), car.changes
@@ -39,6 +41,5 @@ class TestDirty < MiniTest::Unit::TestCase
     car.remove!
     assert car.dirty?
     assert !car.changes.empty?
-
   end
 end

@@ -57,4 +57,23 @@ class TestDocument < MiniTest::Unit::TestCase
     a.insert!
     assert_equal a, Animal.find_one(a.id)
   end
+
+  def test_to_hash
+    a = Animal.new(name: "Kitty")
+    assert_equal a.document.to_hash, a.to_hash
+  end
+
+  def test_merge
+    a = Animal.new(name: "Kitty")
+    a.merge!(color: "black", hobbies: {sleeping: true, eating: true})
+    assert a.dirty?
+    assert_equal ({"_id" => [nil, a.id], "name" => [nil, "Kitty"], "color" => [nil, "black"], "hobbies.sleeping" => [nil, true], "hobbies.eating" => [nil, true]}), a.changes
+    assert_equal ({"_id" => a.id, "name" => "Kitty", "color" => "black", "hobbies" => {"sleeping" => true, "eating" => true}}), a.to_hash
+    a.save!
+    assert !a.dirty?
+    a.merge!(color: nil)
+    assert a.dirty?
+    assert_equal ({"color" => ["black", nil]}), a.changes
+    assert_equal ({"_id" => a.id, "name" => "Kitty", "color" => nil, "hobbies" => {"sleeping" => true, "eating" => true}}), a.to_hash
+  end
 end
