@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+require 'irb'
+require 'irb/completion'
+require_relative '../lib/mini_mongo'
+require 'benchmark'
+
+MiniMongo.db = Mongo::Connection.new["minimongo"]
+
+class Person
+  include MiniMongo::Document
+end
+
+IRB.start
