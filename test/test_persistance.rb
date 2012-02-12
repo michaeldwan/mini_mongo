@@ -11,10 +11,6 @@ class TestPersistance < MiniTest::Unit::TestCase
       collection.create_index(:name, {unique: true})
     end
 
-    class << self
-      attr_accessor :callbacks
-    end
-
     set_callback :insert do |object|
       object.insert_callback = true
     end
@@ -26,32 +22,42 @@ class TestPersistance < MiniTest::Unit::TestCase
   end
 
   def test_crud
-    Person.callbacks = []
-
     person = Person.new(name: "Michael", height: 71, location: {city: "Boulder"})
+    assert person.new?
     assert !person.persisted?
-    person.insert
+    assert !person.removed?
+    person.insert!
     
     assert person.insert_callback
+    assert !person.new?
     assert person.persisted?
-    
+    assert !person.removed?
+
     assert_equal 1, Person.count
 
     person = Person.find_one(person.to_oid)
+    assert !person.new?
+    assert person.persisted?
+    assert !person.removed?
     assert_equal "Michael", person["name"]
     assert_equal "Boulder", person["location.city"]
 
-    assert !person.dirty?
     person["brogrammer"] = false
-    assert person.dirty?
     person.reload
-    assert !person.dirty?
+    assert !person.new?
+    assert person.persisted?
+    assert !person.removed?
+
 
     person = Person.find_one(person.to_oid)
     person["height"] = 123
     person["job.company"] = "snapjoy"
     person["location"] = {"hemisphere" => "north"}
     person.update
+    assert !person.new?
+    assert person.persisted?
+    assert !person.removed?
+
 
     person = Person.find_one(person.to_oid)
     assert_equal 123, person["height"]
@@ -60,10 +66,41 @@ class TestPersistance < MiniTest::Unit::TestCase
 
     person["height"] = 456
     person.remove
-    assert person.removed?
+    assert !person.new?
     assert !person.persisted?
-    assert !person.dirty?
+    assert person.removed?
     assert_equal 0, Person.count
+  end
+
+  def test_save
+    person = Person.new
+    person.stubs(:persisted? => false)
+    person.expects(:insert)
+    person.save
+
+    person.stubs(:persisted? => true)
+    person.expects(:update)
+    person.save
+
+    person.stubs(:persisted? => false)
+    person.expects(:insert!)
+    person.save!
+
+    person.stubs(:persisted? => true)
+    person.expects(:update!)
+    person.save!
+  end
+
+  def test_safe_methods
+    person = Person.new
+    person.expects(:insert).with(safe: true)
+    person.insert!
+
+    person.expects(:update).with(safe: true)
+    person.update!
+
+    person.expects(:remove).with(safe: true)
+    person.remove!
   end
 
   def test_duplucate_key_error

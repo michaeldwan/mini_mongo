@@ -1,7 +1,8 @@
 module MiniMongo::Document
-  extend ActiveSupport::Concern  
+  extend ActiveSupport::Concern
 
   include MiniMongo::Persistance
+  include MiniMongo::Dirty
   
   included do
     extend ActiveModel::Callbacks
@@ -9,6 +10,9 @@ module MiniMongo::Document
   end
 
   def initialize(hash = {}, persisted = false)
+    if hash[:_id].blank? && hash["_id"].blank?
+      hash.reverse_merge!("_id" => collection.pk_factory.new)
+    end
     set_document(hash)
     @persisted = persisted
   end
@@ -18,12 +22,12 @@ module MiniMongo::Document
   end
 
   def [](key)
-    @document.dot_get(key)
+    @document.dot_get(key.to_s)
   end
 
   def []=(key, value)
     snapshot
-    @document.dot_set(key, value)
+    @document.dot_set(key.to_s, value)
   end
 
   def collection
@@ -33,6 +37,10 @@ module MiniMongo::Document
   def set_document(hash)
     hash = MiniMongo::DotHash.new(hash) unless hash.is_a?(MiniMongo::DotHash)
     @document = MiniMongo::DotHash.new(hash)
+  end
+
+  def id
+    self["_id"]
   end
 
   def to_oid

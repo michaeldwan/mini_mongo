@@ -1,51 +1,16 @@
 module MiniMongo::Persistance
+  extend ActiveSupport::Concern
+
   def persisted?
     @persisted == true
-  end
-
-  def dirty?
-    # should it actually compare the data?
-    @snapshot.present?
   end
 
   def removed?
     @removed == true
   end
 
-  def new_record?
-    !persisted?
-  end
-
-  def changeset
-    return unless dirty?
-    persisted_hash = (self.snapshot_data || MiniMongo::DotHash.new).to_key_value
-    current_hash = self.document.to_key_value
-    
-    log = []
-    
-    persisted_hash.each do |k,v|
-      unless current_hash.has_key?(k)
-        found = nil
-        parts = k.split(".")
-        while parts.pop
-          if !self.document.dot_get(parts.join("."))
-            found = [:unset, parts.join("."), 1]
-          end
-        end
-        found ||= [:unset, k, 1]
-        log << found
-      end
-    end
-    
-    current_hash.each do |k,v|
-      if v != persisted_hash[k]
-        unless log.include?([:set, k, v])
-          log << [:set, k, v]
-        end
-      end
-    end
-    
-    log.uniq
+  def new?
+    !persisted? && !removed?
   end
 
   def reload(new_doc = nil)
@@ -56,16 +21,24 @@ module MiniMongo::Persistance
     true
   end
 
+  def save(*args)
+    persisted? ? update(*args) : insert(*args)
+  end
+
+  def save!(*args)
+    persisted? ? update!(*args) : insert!(*args)
+  end
+
   def insert(options = {})
     raise AlreadyInsertedError, "document has already been inserted" if persisted?
 
     response = run_callbacks :insert do
       # validation?
-      response = collection.insert(document, options)
+      response = collection.insert(document.to_hash, options)
       unless response.is_a?(BSON::ObjectId)
         raise InsertError, "not an object: #{ret.inspect}"
       end
-      document.dot_set("_id", response)
+      document.dot_set("_id", response) if document["_id"].blank?
       @persisted = true
       clear_snapshot
       response
@@ -84,17 +57,16 @@ module MiniMongo::Persistance
   end
 
   def update(options = {})
-    raise NotInsertedError, "document must be inserted before being updated" unless persisted?
+    return false unless dirty?
 
-    changeset = self.changeset
-    return true if changeset.blank?
+    raise NotInsertedError, "document must be inserted before being updated" unless persisted?
 
     run_callbacks :update do
       # validation?
       only_if_current = options.delete(:only_if_current)
       options[:safe] = true if !options[:safe] && only_if_current
-      selector = build_selector(snapshot_data.to_key_value, changeset, only_if_current)
-      updates = build_update_hash(changeset)
+      selector = self.class.build_update_selector(self.to_oid, changes, only_if_current)
+      updates = self.class.build_update_hash(changes)
 
       if options.delete(:find_and_modify) == true
         response = self.collection.find_and_modify(query: selector, update: updates, new: true)
@@ -106,9 +78,9 @@ module MiniMongo::Persistance
           true
         else
           if only_if_current
-            raise StaleUpdateError, ret.inspect
+            raise StaleUpdateError, response.inspect
           else
-            raise MiniMongo::UpdateError, ret.inspect
+            raise MiniMongo::UpdateError, response.inspect
           end
         end
       end
@@ -145,46 +117,38 @@ module MiniMongo::Persistance
     remove(options.merge(:safe => true))
   end
 
+  module ClassMethods
+
   # protected
-    def snapshot
-      return if @snapshot
-      @snapshot = Marshal.dump(self.document)
-      true
-    end
 
-    def snapshot_data
-      @snapshot_data ||= begin
-        Marshal.load(@snapshot) if @snapshot
-      end
-    end
-
-    def clear_snapshot
-      @snapshot = nil
-    end
-
-    def build_update_hash(changeset)
+    def build_update_hash(changes)
       update_hash = Hash.new { |h, k| h[k] = {} }
 
-      changeset.each do |operation, key, value|
-        update_hash["$#{operation}"][key] = value
+      changes.each do |key, change|
+        if change[1].blank?
+          update_hash["$unset"][key] = 1
+        else
+          update_hash["$set"][key] = change[1]
+        end
       end
       update_hash
     end
 
-    def build_selector(persisted_document, changeset, only_if_current = false)
-      update_selector = {"_id" => persisted_document["_id"]}
-      return update_selector unless only_if_current
-      changeset.each do |op, k, v|
-        if persisted_val = persisted_document[k]
+    def build_update_selector(id, changeset, only_if_current = false)
+      selector = {"_id" => id}
+      return selector unless only_if_current
+      changes.each do |key, change|
+        if change[0].present?
           if persisted_val == []
             # work around a bug where mongo won't find a doc
             # using an empty array [] if an index is defined
             # on that field.
             persisted_val = { "$size" => 0 }
           end
-          update_selector[k] = persisted_val
+          selector[k] = persisted_val
         end
       end
-      update_selector
+      selector
     end
+  end
 end
