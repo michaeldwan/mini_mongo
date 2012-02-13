@@ -12,6 +12,7 @@ require 'active_support/core_ext/object/blank'
 module MiniMongo
   class << self
     def db
+      raise ConfigurationError, "No database set" if @db.blank?
       @db
     end
     
@@ -21,7 +22,7 @@ module MiniMongo
     end
   end
 
-  class MiniMongoError < RuntimeError; end
+  class MiniMongoError        < RuntimeError; end
   class AlreadyInsertedError  < MiniMongoError; end
   class NotInsertedError      < MiniMongoError; end
   class InsertError           < MiniMongoError; end
@@ -31,6 +32,7 @@ module MiniMongo
   class NotValidError         < MiniMongoError; end
   class DuplicateKeyError     < MiniMongoError; end
   class ModifierUpdateError   < MiniMongoError; end
+  class ConfigurationError    < MiniMongoError; end
 end
 
 require_relative "core_ext/hash"
