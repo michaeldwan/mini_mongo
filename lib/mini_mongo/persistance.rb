@@ -14,11 +14,11 @@ module MiniMongo::Persistance
   end
 
   def reload(new_doc = nil)
-    new_doc ||= collection.find_one(self["_id"])
+    new_doc ||= collection.find_one(_id: id)
     set_document(new_doc)
     @persisted = true
     clear_snapshot
-    true
+    self
   end
 
   def save(*args)
@@ -35,9 +35,7 @@ module MiniMongo::Persistance
     response = run_callbacks :insert do
       # validation?
       response = collection.insert(document.to_hash, options)
-      unless response.is_a?(BSON::ObjectId)
-        raise InsertError, "not an object: #{ret.inspect}"
-      end
+      raise MiniMongo::InsertError, "blank _id: #{response.inspect}" if response.blank?
       document.dot_set("_id", response) if document["_id"].blank?
       @persisted = true
       clear_snapshot
@@ -78,7 +76,7 @@ module MiniMongo::Persistance
           true
         else
           if only_if_current
-            raise StaleUpdateError, response.inspect
+            raise MiniMongo::StaleUpdateError, response.inspect
           else
             raise MiniMongo::UpdateError, response.inspect
           end
@@ -87,7 +85,7 @@ module MiniMongo::Persistance
     end
   rescue Mongo::OperationFailure => e
     if e.message.to_s =~ /^11000\:/
-      raise DuplicateKeyError, e.message
+      raise MiniMongo::DuplicateKeyError, e.message
     else
       raise e
     end
@@ -98,7 +96,7 @@ module MiniMongo::Persistance
   end
 
   def remove(options = {})
-    raise NotInsertedError, "document must be inserted before it can be removed" unless persisted?
+    raise MiniMongo::NotInsertedError, "document must be inserted before it can be removed" unless persisted?
 
     run_callbacks :remove do
       response = collection.remove({_id: self[:_id]}, options)
@@ -134,18 +132,15 @@ module MiniMongo::Persistance
       update_hash
     end
 
-    def build_update_selector(id, changeset, only_if_current = false)
+    def build_update_selector(id, changes, only_if_current = false)
       selector = {"_id" => id}
       return selector unless only_if_current
       changes.each do |key, change|
         if change[0].present?
-          if persisted_val == []
-            # work around a bug where mongo won't find a doc
-            # using an empty array [] if an index is defined
-            # on that field.
-            persisted_val = { "$size" => 0 }
-          end
-          selector[k] = persisted_val
+          # work around a bug where mongo won't find a doc
+          # using an empty array [] if an index is defined
+          # on that field.
+          selector[key] = change[0] == [] ? {"$size" => 0} : change[0]
         end
       end
       selector
