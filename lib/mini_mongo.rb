@@ -29,15 +29,27 @@ module MiniMongo
   class StaleUpdateError      < MiniMongoError; end
   class UpdateError           < MiniMongoError; end
   class RemoveError           < MiniMongoError; end
-  class NotValidError         < MiniMongoError; end
   class DuplicateKeyError     < MiniMongoError; end
   class ModifierUpdateError   < MiniMongoError; end
   class ConfigurationError    < MiniMongoError; end
+
+  class ValidationError < MiniMongoError
+    attr_reader :errors
+    def initialize(errors)
+      @errors = errors
+    end
+
+    def to_s
+      errors.map { |field, message| message }.join(", ")
+    end
+  end
+  
 end
 
 require_relative "core_ext/hash"
-require_relative "mini_mongo/persistance"
-require_relative "mini_mongo/dirty"
-require_relative "mini_mongo/modifications"
+require_relative "mini_mongo/document/persistance"
+require_relative "mini_mongo/document/dirty"
+require_relative "mini_mongo/document/modifications"
+require_relative "mini_mongo/document/validation_errors"
 require_relative "mini_mongo/document"
 require_relative "mini_mongo/dot_hash"

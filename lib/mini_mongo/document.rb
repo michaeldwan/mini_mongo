@@ -1,10 +1,11 @@
 module MiniMongo::Document
   extend ActiveSupport::Concern
 
-  include MiniMongo::Persistance
-  include MiniMongo::Dirty
-  include MiniMongo::Modifications
-  
+  include Persistance
+  include Dirty
+  include Modifications
+  include ValidationErrors
+
   included do
     extend ActiveModel::Callbacks
     define_model_callbacks :insert, :update, :remove
@@ -95,8 +96,8 @@ module MiniMongo::Document
     end
     alias :first :find_one
 
-    def count
-      collection.count
+    def count(query = {})
+      collection.find(query).count
     end
 
     private
