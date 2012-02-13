@@ -3,6 +3,7 @@ module MiniMongo::Document
 
   include MiniMongo::Persistance
   include MiniMongo::Dirty
+  include MiniMongo::Modifications
   
   included do
     extend ActiveModel::Callbacks
@@ -61,6 +62,10 @@ module MiniMongo::Document
     hash = MiniMongo::DotHash.new(hash) unless hash.is_a?(MiniMongo::DotHash)
     set_document(MiniMongo::DotHash.new(document.raw_hash.deep_merge(hash)))
     document
+  end
+
+  def has_key?(key)
+    !document[key].nil?
   end
 
   module ClassMethods
