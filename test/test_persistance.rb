@@ -11,6 +11,10 @@ class TestPersistance < MiniTest::Unit::TestCase
       collection.create_index(:name, {unique: true})
     end
 
+    def validate
+      add_error("name", :wtf_gimme_name) if self["name"].blank?
+    end
+
     set_callback :insert do |object|
       object.insert_callback = true
     end
@@ -107,5 +111,21 @@ class TestPersistance < MiniTest::Unit::TestCase
     Person.create_indexes
     Person.new(name: "Michael").insert!
     assert_raises(MiniMongo::DuplicateKeyError) { Person.new(name: "Michael").insert! }
+  end
+
+  def test_validation_errors
+    p = Person.new
+    refute p.valid?
+    assert_raises(MiniMongo::ValidationError) { p.insert }
+    assert_raises(MiniMongo::ValidationError) { p.insert! }
+
+    p["name"] = "Michael"
+    p.save!
+
+    p = Person.find_one(p.id)
+    p["name"] = nil
+    assert_raises(MiniMongo::ValidationError) { p.update }
+    assert_raises(MiniMongo::ValidationError) { p.update! }
+
   end
 end

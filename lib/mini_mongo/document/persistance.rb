@@ -35,7 +35,7 @@ module MiniMongo
         raise AlreadyInsertedError, "document has already been inserted" if persisted?
 
         response = run_callbacks :insert do
-          # validation?
+          validate!
           response = collection.insert(document.to_hash, options)
           raise MiniMongo::InsertError, "blank _id: #{response.inspect}" if response.blank?
           document.dot_set("_id", response) if document["_id"].blank?
@@ -62,7 +62,7 @@ module MiniMongo
         raise NotInsertedError, "document must be inserted before being updated" unless persisted?
 
         run_callbacks :update do
-          # validation?
+          validate!
           only_if_current = options.delete(:only_if_current)
           options[:safe] = true if !options[:safe] && only_if_current
           selector = self.class.build_update_selector(self.to_oid, changes, only_if_current)
