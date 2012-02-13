@@ -2,8 +2,8 @@ source "http://rubygems.org"
 
 gem "mongo", "~> 1.5.2"
 gem "bson_ext", "~> 1.5.2"
-gem "activesupport", "~> 3.2.1"
-gem "activemodel", "~> 3.2.1"
+gem "activesupport", ">= 3.0.5"
+gem "activemodel", ">= 3.0.5"
 
 group :development do
   gem "minitest", ">= 0"

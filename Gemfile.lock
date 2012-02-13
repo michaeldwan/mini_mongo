@@ -39,8 +39,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activemodel (~> 3.2.1)
-  activesupport (~> 3.2.1)
+  activemodel (>= 3.0.5)
+  activesupport (>= 3.0.5)
   bson_ext (~> 1.5.2)
   bundler (~> 1.0.0)
   jeweler (~> 1.8.3)
