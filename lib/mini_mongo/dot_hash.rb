@@ -42,8 +42,11 @@ class MiniMongo::DotHash
     current_value = to_hash
     while !parts.empty?
       part = parts.shift
-      current_value = current_value[part]
-      return current_value unless current_value.is_a?(Hash)
+      if sub_value = extract(current_value, part)
+        current_value = sub_value
+      else
+        return nil
+      end
     end
     current_value
   end
@@ -78,4 +81,13 @@ class MiniMongo::DotHash
   def to_key_value
     kv = {}; dot_list.collect { |k| kv[k] = dot_get(k) }; kv
   end
+
+  private
+    def extract(object, key)
+      if object.is_a?(Hash)
+        object[key]
+      elsif object.respond_to?(:map)
+        object.map { |sub_object| sub_object[key] }.flatten
+      end
+    end
 end
