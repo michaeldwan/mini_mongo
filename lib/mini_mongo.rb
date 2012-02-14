@@ -34,8 +34,9 @@ module MiniMongo
   class ConfigurationError    < MiniMongoError; end
 
   class ValidationError < MiniMongoError
-    attr_reader :errors
-    def initialize(errors)
+    attr_reader :errors, :document
+    def initialize(document, errors)
+      @document = document
       @errors = errors
     end
 

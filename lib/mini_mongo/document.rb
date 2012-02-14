@@ -78,7 +78,7 @@ module MiniMongo::Document
       raise(ArgumentError, "Must supply a Mongo::DB object") unless db.is_a?(Mongo::DB)
       @db = db
     end
-
+    
     def collection_name
       self.to_s.tableize
     end

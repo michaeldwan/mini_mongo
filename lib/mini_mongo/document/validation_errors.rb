@@ -3,10 +3,6 @@ module MiniMongo
     module ValidationErrors
       extend ActiveSupport::Concern
 
-      def errors
-        @errors ||= []
-      end
-
       def add_error(field, error)
         @errors ||= []
         @errors << [field.to_s, error.to_sym]
@@ -22,13 +18,15 @@ module MiniMongo
       end
 
       def validate!
-        raise ValidationError.new(error_messages) unless valid?
+        raise ValidationError.new(self, errors) unless valid?
         true
       end
 
-      def error_messages
-        errors.map do |field, error|
-          [field, I18n.t("#{self.class.name.underscore}.validations.#{field.gsub(/\./, "-")}.#{error}")]
+      def errors
+        return [] if @errors.nil?
+        @errors.map do |field, error|
+          {field: field, code: error}
+          # [field, I18n.t("#{self.class.name.underscore}.validations.#{field.gsub(/\./, "-")}.#{error}")]
         end
       end
 

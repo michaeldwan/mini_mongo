@@ -14,18 +14,14 @@ class TestValidationErrors < MiniTest::Unit::TestCase
   def test_validate
     car = Car.new
     refute car.valid?
-    assert_includes car.errors, ["model", :required]
-    I18n.expects(:t).with("test_validation_errors/car.validations.model.required").returns("biff")
-    assert_includes car.error_messages, ["model", "biff"]
+    assert_includes car.errors, {field: "model", code: :required}
 
     car["model"] = "DeLorean time machine"
     refute car.valid?
-    assert_includes car.errors, ["model", :invalid]
-    I18n.expects(:t).with("test_validation_errors/car.validations.model.invalid").returns("zap")
-    assert_includes car.error_messages, ["model", "zap"]
+    assert_includes car.errors, {field: "model", code: :invalid}
 
     car["model"] = "DeLorean"
     assert car.valid?
-    assert car.error_messages.empty?
+    assert car.errors.empty?
   end
 end
