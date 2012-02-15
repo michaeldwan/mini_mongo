@@ -20,7 +20,7 @@ GEM
       rdoc
     json (1.6.5)
     metaclass (0.0.1)
-    minitest (2.11.1)
+    minitest (2.11.2)
     mocha (0.10.4)
       metaclass (~> 0.0.1)
     mongo (1.5.2)
