@@ -1,5 +1,5 @@
 module MiniMongo
-  module Document
+  module Concerns
     module Persistance
       extend ActiveSupport::Concern
 

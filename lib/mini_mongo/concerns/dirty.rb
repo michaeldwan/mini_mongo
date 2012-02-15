@@ -1,5 +1,5 @@
 module MiniMongo
-  module Document
+  module Concerns
     module Dirty
       def dirty?
         (!persisted? && !removed?) || changes.present?

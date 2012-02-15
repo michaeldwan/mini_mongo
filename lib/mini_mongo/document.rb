@@ -1,15 +1,12 @@
 module MiniMongo::Document
   extend ActiveSupport::Concern
 
-  include Persistance
-  include Dirty
-  include Modifications
-  include ValidationErrors
-
-  included do
-    extend ActiveModel::Callbacks
-    define_model_callbacks :insert, :update, :remove
-  end
+  include MiniMongo::Concerns::Callbacks
+  include MiniMongo::Concerns::Persistance
+  include MiniMongo::Concerns::Dirty
+  include MiniMongo::Concerns::Modifications
+  include MiniMongo::Concerns::Validation
+  include MiniMongo::Concerns::Serialization
 
   def initialize(hash = {}, persisted = false)
     if hash[:_id].blank? && hash["_id"].blank?

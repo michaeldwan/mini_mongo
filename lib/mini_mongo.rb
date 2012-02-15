@@ -44,13 +44,15 @@ module MiniMongo
       errors.map { |field, message| message }.join(", ")
     end
   end
-  
 end
 
 require_relative "core_ext/hash"
-require_relative "mini_mongo/document/persistance"
-require_relative "mini_mongo/document/dirty"
-require_relative "mini_mongo/document/modifications"
-require_relative "mini_mongo/document/validation_errors"
+require_relative "extensions/object_id"
+require_relative "mini_mongo/concerns/callbacks"
+require_relative "mini_mongo/concerns/persistance"
+require_relative "mini_mongo/concerns/dirty"
+require_relative "mini_mongo/concerns/modifications"
+require_relative "mini_mongo/concerns/validation"
+require_relative "mini_mongo/concerns/serialization"
 require_relative "mini_mongo/document"
 require_relative "mini_mongo/dot_hash"

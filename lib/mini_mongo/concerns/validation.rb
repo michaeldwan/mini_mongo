@@ -1,6 +1,6 @@
 module MiniMongo
-  module Document
-    module ValidationErrors
+  module Concerns
+    module Validation
       extend ActiveSupport::Concern
 
       def add_error(field, error)
