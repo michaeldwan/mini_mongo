@@ -76,4 +76,12 @@ class TestDocument < MiniTest::Unit::TestCase
     assert_equal ({"color" => ["black", nil]}), a.changes
     assert_equal ({"_id" => a.id, "name" => "Kitty", "color" => nil, "hobbies" => {"sleeping" => true, "eating" => true}}), a.to_hash
   end
+
+  def test_options_for_find
+    Animal.collection.expects(:find).with do |query, options|
+      options[:sort] == [[:a, 1], [:b, -1]]
+    end
+
+    Animal.find({}, {sort: {a: 1, b: -1}})
+  end
 end

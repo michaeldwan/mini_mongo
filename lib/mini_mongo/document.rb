@@ -66,6 +66,15 @@ module MiniMongo::Document
     !document[key].nil?
   end
 
+  def inspect
+    "<#{self.class.name} #{attributes_for_inspect.map {|k, v| "#{k}:#{v}"}.join(", ")}>"
+  end
+
+  def attributes_for_inspect
+    to_hash
+  end
+  protected :attributes_for_inspect
+
   module ClassMethods
     def db
       @db || MiniMongo.db || nil
@@ -102,6 +111,11 @@ module MiniMongo::Document
         options.reverse_merge!({
           transformer: lambda { |doc| new(doc, true) }
         })
+
+        if options[:sort] && options[:sort].is_a?(Hash)
+          options[:sort] = options[:sort].to_a
+        end
+
         [query, options]
       end
   end
