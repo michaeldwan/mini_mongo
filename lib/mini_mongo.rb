@@ -30,8 +30,20 @@ module MiniMongo
   class UpdateError           < MiniMongoError; end
   class RemoveError           < MiniMongoError; end
   class DuplicateKeyError     < MiniMongoError; end
-  class ModifierUpdateError   < MiniMongoError; end
   class ConfigurationError    < MiniMongoError; end
+
+  class ModifierUpdateError < MiniMongoError
+    attr_reader :response
+
+    def initialize(response)
+      @response = response
+    end
+
+    def to_s
+      response.inspect
+    end
+  end
+
 
   class ValidationError < MiniMongoError
     attr_reader :errors, :document
