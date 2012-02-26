@@ -102,6 +102,10 @@ module MiniMongo::Document
     end
     alias :first :find_one
 
+    def distinct(key, query = {})
+      collection.distinct(key, options_for_find(query).first)
+    end
+
     def count(query = {})
       collection.find(query).count
     end

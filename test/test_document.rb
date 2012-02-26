@@ -84,4 +84,15 @@ class TestDocument < MiniTest::Unit::TestCase
 
     Animal.find({}, {sort: {a: 1, b: -1}})
   end
+
+  def test_distinct
+    Animal.new(name: 'kitty', color: 'black').insert!
+    Animal.new(name: 'butters', color: 'yellow').insert!
+    Animal.new(name: 'dino', color: 'purple').insert!
+    Animal.new(name: 'kitty', color: 'black').insert!
+    Animal.new(name: 'reilly', color: 'black').insert!
+
+    assert_equal %w(kitty butters dino reilly), Animal.distinct(:name)
+    assert_equal %w(kitty reilly), Animal.distinct(:name, color: 'black')
+  end
 end
