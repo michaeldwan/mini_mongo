@@ -95,4 +95,12 @@ class TestDocument < MiniTest::Unit::TestCase
     assert_equal %w(kitty butters dino reilly), Animal.distinct(:name)
     assert_equal %w(kitty reilly), Animal.distinct(:name, color: 'black')
   end
+
+  def test_query
+    Animal.expects(:options_for_find).returns([{a: 1}, {b: 2}])
+
+    query, options = Animal.query({a: 'b'}, {c: 'd'})
+    assert_equal ({a: 1}), query
+    assert_equal ({b: 2}), options
+  end
 end

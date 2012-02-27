@@ -110,6 +110,10 @@ module MiniMongo::Document
       collection.find(query).count
     end
 
+    def query(query = {}, options = {})
+      options_for_find(query, options)
+    end
+
     private
       def options_for_find(query = {}, options = {})
         options.reverse_merge!({
