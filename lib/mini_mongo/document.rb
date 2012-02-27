@@ -111,7 +111,7 @@ module MiniMongo::Document
     end
 
     def query(query = {}, options = {})
-      options_for_find(query, options)
+      options_for_find(query, options).first
     end
 
     private

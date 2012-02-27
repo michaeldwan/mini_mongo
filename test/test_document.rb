@@ -99,8 +99,7 @@ class TestDocument < MiniTest::Unit::TestCase
   def test_query
     Animal.expects(:options_for_find).returns([{a: 1}, {b: 2}])
 
-    query, options = Animal.query({a: 'b'}, {c: 'd'})
+    query = Animal.query({a: 'b'})
     assert_equal ({a: 1}), query
-    assert_equal ({b: 2}), options
   end
 end
