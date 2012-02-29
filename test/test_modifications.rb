@@ -89,7 +89,9 @@ class TestModifications < MiniTest::Unit::TestCase
     store.mod! { bit("status", {and: 3, or: 8}) }
     assert_equal 11, store.reload["status"]
 
-    assert_raises(MiniMongo::ModifierUpdateError) { Store.new.mod! { set("a", "b") } }
+    assert_raises(MiniMongo::ModifierUpdateError) { Store.new.mod!(strict: true) { set("a", "b") } }
+    assert_equal 0, Store.new.mod!(strict: false) { set("a", "b") }
+    assert_equal 0, Store.new.mod! { set("a", "b") }
   end
 
   def test_modifiers
@@ -205,7 +207,9 @@ class TestModifications < MiniTest::Unit::TestCase
     assert_equal 72, b.reload["sales"]
 
     assert Store.mod({_id: 'bad-id'}, multi: true) { inc("sales", 32) }
-    assert_raises(MiniMongo::ModifierUpdateError) { Store.mod!({_id: 'bad-id'}, multi: true) { inc("sales", 32) } }
+    assert_raises(MiniMongo::ModifierUpdateError) { Store.mod!({_id: 'bad-id'}, multi: true, strict: true) { inc("sales", 32) } }
+    assert_equal 0, Store.mod!({_id: 'bad-id'}, multi: true, strict: false) { inc("sales", 32) }
+    assert_equal 0, Store.mod!({_id: 'bad-id'}, multi: true) { inc("sales", 32) }
   end
 
   def test_safe

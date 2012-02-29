@@ -22,10 +22,10 @@ module MiniMongo
         
         if !response.is_a?(Hash)
           true
-        elsif response["err"].blank? && response["n"] == 1
-          true
-        else
+        elsif response["err"].present? || (response["n"] == 0 && options[:strict])
           raise MiniMongo::ModifierUpdateError, response.inspect
+        else
+          return response["n"]
         end
       end
       alias :mod :modify
@@ -120,10 +120,10 @@ module MiniMongo
 
           if !response.is_a?(Hash)
             true
-          elsif response["n"] >= 1
-            response["n"]
-          else
+          elsif response["err"].present? || (response["n"] == 0 && options[:strict])
             raise MiniMongo::ModifierUpdateError, response.inspect
+          else
+            return response["n"]
           end
         end
         alias :mod :modify
