@@ -6,8 +6,13 @@ module MiniMongo
       def modify(options = {}, &block)
         snapshot
         changeset = ChangeSet.new
-        changeset.instance_eval(&block)
 
+        if block.arity == 1
+          yield changeset
+        else
+          changeset.instance_eval(&block)
+        end
+        
         return false if changeset.modifiers.empty?
 
         only_if_current = options.delete(:only_if_current)
@@ -102,10 +107,16 @@ module MiniMongo
       module ClassMethods
         def modify(query = {}, options = {}, &block)
           changeset = ChangeSet.new
-          changeset.instance_eval(&block)
-          response = collection.update(query, changeset.modifiers, options)
-          
+
+          if block.arity == 1
+            yield changeset
+          else
+            changeset.instance_eval(&block)
+          end
+
           return false if changeset.modifiers.empty?
+
+          response = collection.update(query, changeset.modifiers, options)
 
           if !response.is_a?(Hash)
             true
