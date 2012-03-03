@@ -118,6 +118,19 @@ module MiniMongo
 
           response = collection.update(query, changeset.modifiers, options)
 
+          def rename_dolla(hash)
+             hash.inject({}) do |out, val|
+              out[val[0].to_s.gsub(/\$/, '@')] = if val[1].is_a?(Hash)
+                rename_dolla(val[1])
+              else
+                val[1]
+              end
+              out
+            end
+          end
+
+          self.db.collection("#{self.collection_name}.log").insert({t: Time.now.to_f, selector: query, update: rename_dolla(changeset.modifiers)})
+
           if !response.is_a?(Hash)
             true
           elsif response["err"].present? || (response["n"] == 0 && options[:strict])
