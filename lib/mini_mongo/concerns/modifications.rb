@@ -118,10 +118,10 @@ module MiniMongo
 
           response = collection.update(query, changeset.modifiers, options)
 
-          def rename_dolla(hash)
+          def rename_keys(hash)
              hash.inject({}) do |out, val|
-              out[val[0].to_s.gsub(/\$/, '@')] = if val[1].is_a?(Hash)
-                rename_dolla(val[1])
+              out[val[0].to_s.gsub(/\$/, '@').gsub(/\./, '{dot}')] = if val[1].is_a?(Hash)
+                rename_keys(val[1])
               else
                 val[1]
               end
@@ -129,7 +129,12 @@ module MiniMongo
             end
           end
 
-          self.db.collection("#{self.collection_name}.log").insert({t: Time.now.to_f, selector: rename_dolla(query), update: rename_dolla(changeset.modifiers)})
+          begin
+            self.db.collection("#{self.collection_name}.log").insert({t: Time.now.to_f, selector: rename_keys(query), update: rename_keys(changeset.modifiers)})  
+          rescue Exception => e
+            puts "Error logging mongodb modification: #{$!}"
+          end
+          
 
           if !response.is_a?(Hash)
             true
