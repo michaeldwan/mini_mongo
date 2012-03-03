@@ -31,7 +31,7 @@ module MiniMongo
       alias :mod :modify
 
       def modify!(options = {}, &block)
-        mod(options.merge(safe: true), &block)
+        mod(options.reverse_merge(safe: true), &block)
       end
       alias :mod! :modify!
 
@@ -129,7 +129,7 @@ module MiniMongo
         alias :mod :modify
 
         def modify!(query = {}, options = {}, &block)
-          mod(query, options.merge(safe: true), &block)
+          mod(query, options.reverse_merge(safe: true), &block)
         end
         alias :mod! :modify!
       end
