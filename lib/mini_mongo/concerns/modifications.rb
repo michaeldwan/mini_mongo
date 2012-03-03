@@ -129,7 +129,7 @@ module MiniMongo
             end
           end
 
-          self.db.collection("#{self.collection_name}.log").insert({t: Time.now.to_f, selector: query, update: rename_dolla(changeset.modifiers)})
+          self.db.collection("#{self.collection_name}.log").insert({t: Time.now.to_f, selector: rename_dolla(query), update: rename_dolla(changeset.modifiers)})
 
           if !response.is_a?(Hash)
             true
