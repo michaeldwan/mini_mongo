@@ -25,6 +25,13 @@ class TestDocument < MiniTest::Unit::TestCase
     assert animal.persisted?
   end
 
+  def test_prepare_document
+    origianl = {species: "Cat", _id: 123}
+    Animal.any_instance.expects(:prepare_document).with(origianl, false).returns({a:1})
+    animal = Animal.new(origianl, false)
+    assert_equal ({"a" => 1}), animal.to_hash
+  end
+
   def test_getting_attributes
     animal = Animal.new({species: "Cat"})
     animal.document.expects(:dot_get).with("species").twice
