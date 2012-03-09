@@ -8,11 +8,8 @@ module MiniMongo::Document
   include MiniMongo::Concerns::Validation
   include MiniMongo::Concerns::Serialization
 
-  def initialize(hash = {}, persisted = false)
-    if hash[:_id].blank? && hash["_id"].blank?
-      hash.reverse_merge!("_id" => collection.pk_factory.new)
-    end
-    set_document(hash)
+  def initialize(document = {}, persisted = false)
+    set_document(prepare_document(document, persisted))
     @persisted = persisted
   end
 
@@ -75,6 +72,14 @@ module MiniMongo::Document
   end
   protected :attributes_for_inspect
 
+  def prepare_document(doc, persisted)
+    if !persisted && doc[:_id].blank? && doc["_id"].blank?
+      doc.reverse_merge!("_id" => collection.pk_factory.new)
+    end
+    doc
+  end
+  protected :prepare_document
+
   module ClassMethods
     def db
       @db || MiniMongo.db || nil
@@ -113,7 +118,7 @@ module MiniMongo::Document
     def query(query = {}, options = {})
       options_for_find(query, options).first
     end
-
+     
     private
       def options_for_find(query = {}, options = {})
         options.reverse_merge!({
