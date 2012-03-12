@@ -58,12 +58,12 @@ module MiniMongo
       end
 
       def update(options = {})
-        return false unless dirty?
-
         raise NotInsertedError, "document must be inserted before being updated" unless persisted?
 
         run_callbacks :save do
           run_callbacks :update do
+            return false unless dirty?
+            
             validate!
             only_if_current = options.delete(:only_if_current)
             options[:safe] = true if !options[:safe] && only_if_current

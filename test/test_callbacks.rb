@@ -42,7 +42,6 @@ class TestCallbacks < MiniTest::Unit::TestCase
 
   def test_callbacks_on_insert
     person = Person.new
-    person.stubs(dirty?: true)
 
     refute person.insert_callback
     refute person.save_callback
@@ -60,7 +59,6 @@ class TestCallbacks < MiniTest::Unit::TestCase
   def test_callbacks_on_update
     Person.new.insert!
     person = Person.first
-    person.stubs(dirty?: true)
 
     refute person.insert_callback
     refute person.save_callback
@@ -77,7 +75,6 @@ class TestCallbacks < MiniTest::Unit::TestCase
 
   def test_callbacks_on_save_when_new
     person = Person.new
-    person.stubs(dirty?: true)
 
     refute person.insert_callback
     refute person.save_callback
@@ -95,7 +92,6 @@ class TestCallbacks < MiniTest::Unit::TestCase
   def test_callbacks_on_save_when_update
     Person.new.insert!
     person = Person.first
-    person.stubs(dirty?: true)
 
     refute person.insert_callback
     refute person.save_callback
