@@ -34,16 +34,17 @@ module MiniMongo
       def insert(options = {})
         raise AlreadyInsertedError, "document has already been inserted" if persisted?
 
-        response = run_callbacks :insert do
-          validate!
-          response = collection.insert(document.to_hash, options)
-          raise MiniMongo::InsertError, "blank _id: #{response.inspect}" if response.blank?
-          document.dot_set("_id", response) if document["_id"].blank?
-          @persisted = true
-          clear_snapshot
-          response
+        run_callbacks :save do
+          run_callbacks :insert do
+            validate!
+            response = collection.insert(document.to_hash, options)
+            raise MiniMongo::InsertError, "blank _id: #{response.inspect}" if response.blank?
+            document.dot_set("_id", response) if document["_id"].blank?
+            @persisted = true
+            clear_snapshot
+            response
+          end
         end
-        response
       rescue Mongo::OperationFailure => e
         if e.message.to_s =~ /^11000\:/
           raise MiniMongo::DuplicateKeyError, e.message
@@ -61,28 +62,30 @@ module MiniMongo
 
         raise NotInsertedError, "document must be inserted before being updated" unless persisted?
 
-        run_callbacks :update do
-          validate!
-          only_if_current = options.delete(:only_if_current)
-          options[:safe] = true if !options[:safe] && only_if_current
-          selector = self.class.build_update_selector(self.to_oid, changes, only_if_current)
-          updates = self.class.build_update_hash(changes)
+        run_callbacks :save do
+          run_callbacks :update do
+            validate!
+            only_if_current = options.delete(:only_if_current)
+            options[:safe] = true if !options[:safe] && only_if_current
+            selector = self.class.build_update_selector(self.to_oid, changes, only_if_current)
+            updates = self.class.build_update_hash(changes)
 
-          if options.delete(:find_and_modify) == true
-            response = self.collection.find_and_modify(query: selector, update: updates, new: true)
-            reload(response)
-          else
-            response = collection.update(selector, updates, options)
-            if !response.is_a?(Hash) || (response["updatedExisting"] && response["n"] == 1)
-              clear_snapshot
-              true
+            if options.delete(:find_and_modify) == true
+              response = self.collection.find_and_modify(query: selector, update: updates, new: true)
+              reload(response)
             else
-              if only_if_current
-                raise MiniMongo::StaleUpdateError, response.inspect
+              response = collection.update(selector, updates, options)
+              if !response.is_a?(Hash) || (response["updatedExisting"] && response["n"] == 1)
+                clear_snapshot
+                true
               else
-                raise MiniMongo::UpdateError, response.inspect
+                if only_if_current
+                  raise MiniMongo::StaleUpdateError, response.inspect
+                else
+                  raise MiniMongo::UpdateError, response.inspect
+                end
               end
-            end
+            end            
           end
         end
       rescue Mongo::OperationFailure => e

@@ -10,7 +10,7 @@ module MiniMongo::Document
 
   def initialize(document = {}, persisted = false)
     set_document(prepare_document(document, persisted))
-    @persisted = persisted
+    run_callbacks :initialize unless @persisted = persisted
   end
 
   def document

@@ -8,7 +8,8 @@ module MiniMongo
       included do
         extend ActiveModel::Callbacks  
 
-        define_model_callbacks :insert, :update, :remove
+        define_model_callbacks :insert, :update, :save, :remove, :only => [:after, :before]
+        define_model_callbacks :initialize, :only => [:after]
       end
     end
   end
