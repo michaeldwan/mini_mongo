@@ -12,18 +12,14 @@ module MiniMongo
 
           changes = {}
 
-          (persisted_hash.keys - current_hash.keys).each do |key|
-            changes[key] = [persisted_hash[key], nil]
-          end
+          (persisted_hash.keys + current_hash.keys).uniq.sort_by { |key| key.length }.each do |key|
+            next if changes.keys.include?(key[0...(key.rindex('.') || -1)])
 
-          (current_hash.keys - persisted_hash.keys).each do |key|
-            changes[key] = [nil, current_hash[key]]
-          end
-
-          (persisted_hash.keys & current_hash.keys).each do |key|
             old_value = persisted_hash[key]
             new_value = current_hash[key]
-            changes[key] = [old_value, new_value] if old_value != new_value
+            next if old_value == new_value
+            next if old_value.is_a?(Hash) && new_value.is_a?(Hash)
+            changes[key] = [old_value, new_value]
           end
 
           changes

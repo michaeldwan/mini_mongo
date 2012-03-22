@@ -69,10 +69,9 @@ class MiniMongo::DotHash
   def dot_list(curr_hash=self.to_hash, path=[])
     list = []
     curr_hash.each do |k,v|
-      if v.is_a?(Hash)
+      list << (path + [k]).join(".")
+      if v.is_a?(Hash) && v.present?
         list.concat dot_list(v, (path + [k]))
-      else
-        list << (path + [k]).join(".")
       end
     end
     list

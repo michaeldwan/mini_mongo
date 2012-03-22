@@ -42,4 +42,26 @@ class TestDirty < MiniTest::Unit::TestCase
     assert car.dirty?
     assert !car.changes.empty?
   end
+
+  def test_removing_a_subdocument
+      car = Car.new({
+        name: "R8",
+        models: {
+          v8: {cost: 123.45},
+          v10: {cost: 456.78}
+        }
+      })
+
+      car.save!
+
+      car.snapshot
+
+      car["models"].delete("v10")
+
+      assert_includes car.changes.keys, "models.v10"
+      refute_includes car.changes.keys, "models.v10.cost"
+
+      assert_equal ({"cost" => 456.78}), car.changes["models.v10"][0]
+      assert_nil car.changes["models.v10"][1]
+  end
 end
